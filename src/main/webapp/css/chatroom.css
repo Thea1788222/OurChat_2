@@ -1,0 +1,119 @@
+/* chatroom.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+#header {
+    background-color: #eee;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#main {
+    display: flex;
+    height: calc(100vh - 50px);
+}
+
+/* 左侧聊天区 */
+#chatContainer {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ccc;
+}
+
+
+
+.chat-message {
+    margin-bottom: 5px;
+}
+
+#inputArea {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+}
+
+#messageInput {
+    resize: none;
+    margin: 5px 0;
+}
+
+#sendButton {
+    align-self: flex-end;
+}
+
+/* 右侧用户区 */
+#userContainer {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+#onlineCountArea {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#onlineUsersBox, #offlineUsersBox {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+#onlineUsersBox h4, #offlineUsersBox h4 {
+    margin: 0 0 5px 0;
+}
+
+#systemMessageArea {
+    height: 30px;
+    line-height: 30px;
+    font-weight: bold;
+    background-color: #eee;
+    text-align: center;
+}
+
+#chatArea {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.chat-message {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.nickname.me {
+    color: blue;
+    font-weight: bold;
+}
+
+.nickname.online {
+    color: green;
+    font-weight: bold;
+}
+
+.nickname.offline {
+    color: gray;
+    font-weight: bold;
+}
+
+.message-content {
+    margin-left: 5px;
+}
+
+.message-time {
+    margin-left: 10px;
+    font-size: 0.8em;
+    color: #999;
+}
+
