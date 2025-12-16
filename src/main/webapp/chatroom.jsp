@@ -53,24 +53,12 @@
 
         <div id="onlineUsersBox">
             <h4>在线用户</h4>
-            <ul id="onlineUserList">
-                <c:forEach var="u" items="${userMap.values()}">
-                    <c:if test="${u.online}">
-                        <li class="online">${u.nickname}</li>
-                    </c:if>
-                </c:forEach>
-            </ul>
+            <ul id="onlineUserList"></ul>
         </div>
 
         <div id="offlineUsersBox">
             <h4>离线用户</h4>
-            <ul id="offlineUserList">
-                <c:forEach var="u" items="${userMap.values()}">
-                    <c:if test="${!u.online}">
-                        <li class="offline">${u.nickname}</li>
-                    </c:if>
-                </c:forEach>
-            </ul>
+            <ul id="offlineUserList"></ul>
         </div>
 
         <div id="systemMessageArea">

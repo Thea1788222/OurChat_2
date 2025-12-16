@@ -10,11 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const onlineUserList = document.getElementById('onlineUserList');
     const offlineUserList = document.getElementById('offlineUserList');
     const onlineCount = document.getElementById('onlineCount');
-    const systemMessage = document.getElementById('systemMessage');
-
-    // 缓存当前显示的用户列表
-    let currentOnlineUsers = new Map();
-    let currentOfflineUsers = new Map();
+    const systemMessage = document.getElementById('systemMessage')
 
     // 初始化 WebSocket
     let wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -25,12 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = messageInput.value.trim();
         if (!content) return;
 
-        const targetUserId = userSelect.value; // ""表示全员
+        const receiverId = userSelect.value;
         const message = {
             type: 'chat',
-            senderId: userId,
+            senderId: Number(userId),
             senderNickname: nickname,
-            targetUserId: targetUserId,
+            receiverId: receiverId ? Number(receiverId) : null,
             content: content,
             time: new Date().toISOString()
         };
@@ -48,23 +44,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 增量更新在线/离线列表
+    // 全量重渲染在线 / 离线用户列表（方案一）
     function updateUserLists(onlineUsers, offlineUsers) {
-        const newOnlineUsers = new Map();
-        const newOfflineUsers = new Map();
 
-        onlineUsers.forEach(u => newOnlineUsers.set(u.userId, u));
-        offlineUsers.forEach(u => newOfflineUsers.set(u.userId, u));
+        // 1. 清空列表
+        onlineUserList.innerHTML = '';
+        offlineUserList.innerHTML = '';
 
-        updateListDOM(onlineUserList, currentOnlineUsers, newOnlineUsers, 'online');
-        updateListDOM(offlineUserList, currentOfflineUsers, newOfflineUsers, 'offline');
+        // 2. 重建在线用户列表
+        onlineUsers.forEach(u => {
+            const li = document.createElement('li');
+            li.className = 'online';
+            li.textContent = u.nickname;
+            onlineUserList.appendChild(li);
+        });
 
-        currentOnlineUsers = newOnlineUsers;
-        currentOfflineUsers = newOfflineUsers;
+        // 3. 重建离线用户列表
+        offlineUsers.forEach(u => {
+            const li = document.createElement('li');
+            li.className = 'offline';
+            li.textContent = u.nickname;
+            offlineUserList.appendChild(li);
+        });
 
+        // 4. 更新在线人数（唯一可信来源）
         onlineCount.textContent = onlineUsers.length;
 
-        // 更新下拉框
+        // 5. 重建下拉框
         userSelect.innerHTML = '<option value="">全员可见</option>';
         [...onlineUsers, ...offlineUsers].forEach(u => {
             if (u.userId != userId) {
@@ -73,30 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 opt.textContent = u.nickname;
                 opt.className = u.online ? 'online' : 'offline';
                 userSelect.appendChild(opt);
-            }
-        });
-    }
-
-    // 辅助函数：增量更新 DOM
-    function updateListDOM(container, currentMap, newMap, className) {
-        currentMap.forEach((user, id) => {
-            if (!newMap.has(id)) {
-                const node = container.querySelector(`[data-userid='${id}']`);
-                if (node) container.removeChild(node);
-            }
-        });
-
-        newMap.forEach((user, id) => {
-            let node = container.querySelector(`[data-userid='${id}']`);
-            if (!node) {
-                node = document.createElement('li');
-                node.dataset.userid = id;
-                node.className = className;
-                node.textContent = user.nickname;
-                container.appendChild(node);
-            } else {
-                node.textContent = user.nickname;
-                node.className = className;
             }
         });
     }

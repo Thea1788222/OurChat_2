@@ -18,7 +18,7 @@ import java.util.*;
 @ServerEndpoint(value = "/chatSocket", configurator = GetHttpSessionConfigurator.class)
 public class ChatWebSocket {
 
-    private static final Map<Long, Session> onlineSessions = Collections.synchronizedMap(new HashMap<>());
+    public static Map<Long, Session> onlineSessions = Collections.synchronizedMap(new HashMap<>());
 
     private Session session;
     private Long userId;
@@ -48,33 +48,23 @@ public class ChatWebSocket {
     public void onMessage(String message) {
         try {
             Gson gson = new Gson();
-            Map<String, Object> map = gson.fromJson(message, Map.class);
+            ChatMessage chatMessage = gson.fromJson(message, ChatMessage.class);
 
-            ChatMessage chatMessage = new ChatMessage();
-
-            // 处理 senderId
-            Object senderIdObj = map.get("senderId");
-            long senderId = 0;
-            if (senderIdObj instanceof Number) {
-                senderId = ((Number) senderIdObj).longValue();
-            } else if (senderIdObj instanceof String) {
-                senderId = Long.parseLong((String) senderIdObj);
-            }
-            chatMessage.setSenderId(senderId);
-
-            // 昵称
-            chatMessage.setSenderNickname((String) map.get("senderNickname"));
-
-            // 消息内容
-            chatMessage.setContent((String) map.get("content"));
-
-            // 发送时间
+            // 服务器字段
             chatMessage.setSendTime(new Timestamp(System.currentTimeMillis()));
-            chatMessage.setVisibility("ALL");
 
-            // 保存并广播
+            // 保存
             chatMessageService.addMessage(chatMessage);
-            broadcastChatMessage(chatMessage);
+
+            // 推送
+            if (chatMessage.getReceiverId() != null) {
+                // 私聊：接收者 + 发送者
+                sendToUser(chatMessage.getReceiverId(), chatMessage);
+                sendToUser(chatMessage.getSenderId(), chatMessage);
+            } else {
+                // 群聊
+                broadcastChatMessage(chatMessage);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,10 +73,12 @@ public class ChatWebSocket {
 
 
 
+
     @OnClose
     public void onClose() {
-        onlineSessions.remove(userId);
-        userService.setUserOffline(userId);
+        onlineSessions.remove(userId); // WebSocket Map
+        userService.setUserOffline(userId); // 逻辑列表
+
 
         // 广播下线系统消息和更新列表
         broadcastSystemEvent("OFFLINE");
@@ -159,6 +151,19 @@ public class ChatWebSocket {
 
         sendToAllSessions(gson.toJson(jsonMsg));
     }
+
+    //发送给某个用户
+    private void sendToUser(Long userId, ChatMessage message) {
+        Session session = onlineSessions.get(userId);
+        if (session != null && session.isOpen()) {
+            try {
+                session.getBasicRemote().sendText(new Gson().toJson(message));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     /** 工具方法：发送 JSON 给所有在线用户 */
     private void sendToAllSessions(String json) {
