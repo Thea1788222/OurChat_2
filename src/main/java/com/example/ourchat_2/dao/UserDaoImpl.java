@@ -66,20 +66,19 @@ public class UserDaoImpl implements IUserDao {
         }
         return list;
     }
-
     @Override
     public User getUserByEmail(String email) throws SQLException {
-        String sql = "SELECT * FROM user WHERE email = ?";
+        String sql = "SELECT * FROM users WHERE email = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 User user = new User();
-                user.setUserId(rs.getLong("userId"));
+                user.setUserId(rs.getLong("user_id"));
                 user.setNickname(rs.getString("nickname"));
                 user.setEmail(rs.getString("email"));
-                user.setPasswordHash(rs.getString("passwordHash"));
+                user.setPasswordHash(rs.getString("password_hash"));
                 return user;
             }
             return null;
